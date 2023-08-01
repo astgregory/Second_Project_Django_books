@@ -8,11 +8,10 @@ from store.serializers import BooksSerializer
 
 class BookSerializerTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create(username='test_username7')
+        self.user = User.objects.create(username='test_username')
 
     def tearDown(self):
-        # Удаление созданных книг и пользователя из базы данных
-        Book.objects.all().delete()
+        # Удаление созданного пользователя из базы данных
         self.user.delete()
 
     def test_ok(self):
