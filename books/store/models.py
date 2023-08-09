@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -8,9 +9,11 @@ class Book(models.Model):
     author_name = models.CharField(max_length=255)
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='my_books')
     readers = models.ManyToManyField(User, through='UserBookRelation', related_name='books')
+    discount = models.IntegerField(default=0, validators=[MaxValueValidator(100), MinValueValidator(0)])
 
     def __str__(self):
         return f'id {self.id}: {self.name}'
+
 
 class UserBookRelation(models.Model):
     RATE_CHOICES = (
@@ -26,7 +29,6 @@ class UserBookRelation(models.Model):
     like = models.BooleanField(default=False)
     in_bookmarks = models.BooleanField(default=False)
     rate = models.PositiveSmallIntegerField(choices=RATE_CHOICES, null=True)
-
 
     def __str__(self):
         return f'{self.user.username}: {self.book.name}, RATE{self.rate}'

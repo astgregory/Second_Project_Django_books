@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.db.models import Count, Case, When, Avg
+from django.db.models import Count, Case, When, Avg, F
 from django_filters.compat import TestCase
 
 from store.models import Book, UserBookRelation
@@ -19,9 +19,9 @@ class BookSerializerTestCase(TestCase):
         user2 = User.objects.create(username='user2')
         user3 = User.objects.create(username='user3')
         book_1 = Book.objects.create(name='Test book 1', price=25,
-                                     author_name='Author 1')
+                                     author_name='Author 1', discount=20)
         book_2 = Book.objects.create(name='Test book 2', price=55,
-                                     author_name='Author 2')
+                                     author_name='Author 2', discount=35)
         UserBookRelation.objects.create(user=user1, book=book_1, like=True, rate=5)
         UserBookRelation.objects.create(user=user2, book=book_1, like=True, rate=5)
         UserBookRelation.objects.create(user=user3, book=book_1, like=True, rate=4)
@@ -32,7 +32,8 @@ class BookSerializerTestCase(TestCase):
 
         books = Book.objects.all().annotate(
             annotated_likes=Count(Case(When(userbookrelation__like=True, then=1))),
-            rating=Avg('userbookrelation__rate')
+            rating=Avg('userbookrelation__rate'),
+            coast_discount=F('price') - (F('price') * F('discount') / 100)
         ).order_by('id')
         data = BooksSerializer(books, many=True).data
         expected_data = [
@@ -43,7 +44,8 @@ class BookSerializerTestCase(TestCase):
                 'author_name': 'Author 1',
                 'likes_count': 3,
                 'annotated_likes': 3,
-                'rating': '4.67'
+                'rating': '4.67',
+                'coast_discount': '20.00'
             },
             {
                 'id': book_2.id,
@@ -52,7 +54,8 @@ class BookSerializerTestCase(TestCase):
                 'author_name': 'Author 2',
                 'likes_count': 2,
                 'annotated_likes': 2,
-                'rating': '3.50'
+                'rating': '3.50',
+                'coast_discount': '35.75'
             },
         ]
 
