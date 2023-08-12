@@ -1,4 +1,5 @@
-from django.db.models import Count, Case, When, Avg, F
+from django.contrib.auth.models import User
+from django.db.models import Count, Case, When, Avg, F, Prefetch
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -16,7 +17,9 @@ class BookViewSet(ModelViewSet):
         annotated_likes=Count(Case(When(userbookrelation__like=True, then=1))),
         rating=Avg('userbookrelation__rate'),
         coast_discount=F('price') - (F('price') * F('discount') / 100)
-    ).order_by('id')
+    ).prefetch_related(Prefetch('readers',
+                                queryset=User.objects.all().only('first_name',
+                                                                 'last_name'))).order_by('id')
     serializer_class = BooksSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     permission_classes = [IsOwnerOrStaffOrReadOnly]
