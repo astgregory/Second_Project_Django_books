@@ -24,7 +24,9 @@ class BookSerializerTestCase(TestCase):
                                      author_name='Author 2', discount=35)
         UserBookRelation.objects.create(user=user1, book=book_1, like=True, rate=5)
         UserBookRelation.objects.create(user=user2, book=book_1, like=True, rate=5)
-        UserBookRelation.objects.create(user=user3, book=book_1, like=True, rate=4)
+        user_book_3 = UserBookRelation.objects.create(user=user3, book=book_1, like=True)
+        user_book_3.rate = 4
+        user_book_3.save()
 
         UserBookRelation.objects.create(user=user1, book=book_2, like=True, rate=3)
         UserBookRelation.objects.create(user=user2, book=book_2, like=True, rate=4)
@@ -32,7 +34,6 @@ class BookSerializerTestCase(TestCase):
 
         books = Book.objects.all().annotate(
         annotated_likes=Count(Case(When(userbookrelation__like=True, then=1))),
-        rating=Avg('userbookrelation__rate'),
         coast_discount=F('price') - (F('price') * F('discount') / 100)
         ).prefetch_related(Prefetch('readers',
                                 queryset=User.objects.all().only('first_name',
@@ -86,5 +87,5 @@ class BookSerializerTestCase(TestCase):
                 ]
             },
         ]
-        print(data)
+
         self.assertEqual(expected_data, data)
